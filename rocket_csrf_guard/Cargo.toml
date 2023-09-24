@@ -1,0 +1,16 @@
+[package]
+name = "rocket_csrf_guard"
+version.workspace = true
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-trait.workspace = true
+anyhow.workspace = true
+base64.workspace = true
+rand.workspace = true
+rocket.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+rocket_csrf_guard_derive = { path = "../rocket_csrf_guard_derive" }
