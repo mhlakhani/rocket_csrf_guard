@@ -14,7 +14,7 @@
       <p>You can test CSRF checks using headers by running the following curl commands:</p>
       <ul>
         <li>For valid requests: <code>curl https://localhost:8000/header -k -H "X-Csrf-Token: {{ csrf_token }}" -H "Authorization: Bearer {{ session_id }}"</code></li>
-        <li>For valid requests: <code>curl https://localhost:8000/header -k -H "X-Csrf-Token: invalid_token" -H "Authorization: Bearer {{ session_id }}"</code></li>
+        <li>For invalid requests: <code>curl https://localhost:8000/header -k -H "X-Csrf-Token: invalid_token" -H "Authorization: Bearer {{ session_id }}"</code></li>
       </ul>
     </div>
 

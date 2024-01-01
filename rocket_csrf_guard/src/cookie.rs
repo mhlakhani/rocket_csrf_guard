@@ -4,7 +4,7 @@ use crate::{
 };
 
 use rocket::{
-    http::{Cookie, CookieJar, SameSite},
+    http::{Cookie, CookieJar, SameSite, Status},
     request::{FromRequest, Outcome, Request},
 };
 use serde::{Serialize, Serializer};
@@ -60,7 +60,7 @@ impl<'r> FromRequest<'r> for DoubleSubmitCookieCsrfToken {
                 request.cookies().remove(cookie);
                 value
             });
-        maybe_csrf_token.map_or(Outcome::Forward(()), |csrf_token| {
+        maybe_csrf_token.map_or(Outcome::Forward(Status::BadRequest), |csrf_token| {
             Outcome::Success(Self(csrf_token))
         })
     }
@@ -91,14 +91,13 @@ impl<'r, const SS: i8, const EXPIRY: i64> SetDoubleSubmitCookieCsrfTokenImpl<'r,
             SAME_SITE_NONE_DO_NOT_USE_UNLESS_YOU_ARE_SURE => SameSite::None,
             _ => SameSite::Strict,
         };
-        let cookie = Cookie::build(
+        let cookie = Cookie::build((
             DOUBLE_SUBMIT_CSRF_TOKEN_COOKIE_NAME,
             self.csrf_token.clone(),
-        )
+        ))
         .max_age(rocket::time::Duration::seconds(EXPIRY))
         .same_site(ss)
-        .secure(true)
-        .finish();
+        .secure(true);
         self.cookies.add_private(cookie);
         &self.csrf_token
     }
@@ -125,12 +124,15 @@ impl<'r, const SS: i8, const EXPIRY: i64> FromRequest<'r>
 
     async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let maybe_csrf_token = random_id(16);
-        maybe_csrf_token.map_or(Outcome::Forward(()), |csrf_token| {
-            Outcome::Success(Self {
-                cookies: request.cookies(),
-                csrf_token,
-            })
-        })
+        maybe_csrf_token.map_or(
+            Outcome::Forward(Status::InternalServerError),
+            |csrf_token| {
+                Outcome::Success(Self {
+                    cookies: request.cookies(),
+                    csrf_token,
+                })
+            },
+        )
     }
 }
 

@@ -28,6 +28,6 @@ impl<'r> FromRequest<'r> for CsrfCheckProof {
             .as_ref()
             .cloned()
             .map(Outcome::Success)
-            .unwrap_or_else(|| Outcome::Forward(()))
+            .unwrap_or_else(|| Outcome::Forward(rocket::http::Status::InternalServerError))
     }
 }

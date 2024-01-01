@@ -121,8 +121,7 @@ fn test_login_fails_without_cookie() {
         .body(format!("name=Hasnain&csrf_token={csrf_token}"))
         .dispatch();
 
-    // TODO: Make this 403 after rocket upgrade
-    assert_eq!(response.status(), Status::NotFound);
+    assert_eq!(response.status(), Status::BadRequest);
 }
 
 #[test]

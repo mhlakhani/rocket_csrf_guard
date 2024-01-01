@@ -29,7 +29,7 @@ use rand::RngCore;
 use rocket::{
     form::{Form, FromForm},
     get,
-    http::{Cookie, CookieJar, SameSite},
+    http::{Cookie, CookieJar, SameSite, Status},
     outcome::IntoOutcome,
     post,
     request::{FromRequest, Outcome, Request},
@@ -111,7 +111,9 @@ impl<'r> FromRequest<'r> for Session {
             })
             .await;
 
-        session_result.clone().or_forward(())
+        session_result
+            .clone()
+            .or_forward(Status::InternalServerError)
     }
 }
 
@@ -146,11 +148,10 @@ impl SessionManager {
             username,
             csrf_token,
         };
-        let session_cookie = Cookie::build(SESSION_COOKIE_NAME, session_id.clone())
+        let session_cookie = Cookie::build((SESSION_COOKIE_NAME, session_id.clone()))
             .max_age(rocket::time::Duration::days(1))
             .same_site(SameSite::Strict)
-            .secure(true)
-            .finish();
+            .secure(true);
         cookies.add_private(session_cookie);
         self.sessions
             .insert(session.session_id_hash.clone(), session.clone());

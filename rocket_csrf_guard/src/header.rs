@@ -45,8 +45,8 @@ where
     async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
         let verifier = match request.guard::<V>().await {
             request::Outcome::Success(verifier) => verifier,
-            request::Outcome::Failure((status, _)) => {
-                return request::Outcome::Failure((
+            request::Outcome::Error((status, _)) => {
+                return request::Outcome::Error((
                     status,
                     CheckCsrfProtectionHeaderError::NoVerifierFound,
                 ))
@@ -56,7 +56,7 @@ where
         let token = request.headers().get_one(CSRF_HEADER_NAME);
         match token {
             Some(token) => (verifier.verify(&CsrfTokenSourcedFromHeader(token)).await).map_or(
-                request::Outcome::Failure((
+                request::Outcome::Error((
                     Status::Forbidden,
                     CheckCsrfProtectionHeaderError::CsrfTokenVerificationError,
                 )),
@@ -65,7 +65,7 @@ where
                     request::Outcome::Success(Self(std::marker::PhantomData))
                 },
             ),
-            None => request::Outcome::Failure((
+            None => request::Outcome::Error((
                 Status::Forbidden,
                 CheckCsrfProtectionHeaderError::NoHeaderPresent,
             )),

@@ -81,20 +81,20 @@ where
     async fn from_data(request: &'r Request<'_>, data: Data<'r>) -> data::Outcome<'r, Self> {
         let verifier = match request.guard::<V>().await {
             request::Outcome::Success(verifier) => verifier,
-            request::Outcome::Failure((status, _)) => {
-                return data::Outcome::Failure((status, CsrfProtectedFormError::NoVerifierFound))
+            request::Outcome::Error((status, _)) => {
+                return data::Outcome::Error((status, CsrfProtectedFormError::NoVerifierFound))
             }
-            request::Outcome::Forward(_) => return data::Outcome::Forward(data),
+            request::Outcome::Forward(status) => return data::Outcome::Forward((data, status)),
         };
         let inner = match F::from_data(request, data).await {
             data::Outcome::Success(inner) => inner,
-            data::Outcome::Failure((status, e)) => {
-                return data::Outcome::Failure((status, CsrfProtectedFormError::FormParsing(e)))
+            data::Outcome::Error((status, e)) => {
+                return data::Outcome::Error((status, CsrfProtectedFormError::FormParsing(e)))
             }
             data::Outcome::Forward(f) => return data::Outcome::Forward(f),
         };
         (verifier.verify(&inner).await).map_or(
-            data::Outcome::Failure((
+            data::Outcome::Error((
                 Status::Forbidden,
                 CsrfProtectedFormError::CsrfTokenVerificationError,
             )),
@@ -175,20 +175,20 @@ where
     async fn from_data(request: &'r Request<'_>, data: Data<'r>) -> data::Outcome<'r, Self> {
         let verifier = match request.guard::<V>().await {
             request::Outcome::Success(verifier) => verifier,
-            request::Outcome::Failure((status, _)) => {
-                return data::Outcome::Failure((
+            request::Outcome::Error((status, _)) => {
+                return data::Outcome::Error((
                     status,
                     CsrfProtectedFormWithGuardError::CsrfProtection(
                         CsrfProtectedFormError::NoVerifierFound,
                     ),
                 ))
             }
-            request::Outcome::Forward(_) => return data::Outcome::Forward(data),
+            request::Outcome::Forward(status) => return data::Outcome::Forward((data, status)),
         };
         let form = match F::from_data(request, data).await {
             data::Outcome::Success(form) => form,
-            data::Outcome::Failure((status, e)) => {
-                return data::Outcome::Failure((
+            data::Outcome::Error((status, e)) => {
+                return data::Outcome::Error((
                     status,
                     CsrfProtectedFormWithGuardError::CsrfProtection(
                         CsrfProtectedFormError::FormParsing(e),
@@ -207,17 +207,17 @@ where
                         guard,
                         _marker: std::marker::PhantomData,
                     }),
-                    request::Outcome::Failure((status, error)) => data::Outcome::Failure((
+                    request::Outcome::Error((status, error)) => data::Outcome::Error((
                         status,
                         CsrfProtectedFormWithGuardError::FromRequestFailed(status, error),
                     )),
-                    request::Outcome::Forward(_) => data::Outcome::Failure((
+                    request::Outcome::Forward(_) => data::Outcome::Error((
                         Status::InternalServerError,
                         CsrfProtectedFormWithGuardError::FromRequestForwarded,
                     )),
                 }
             }
-            Err(_) => data::Outcome::Failure((
+            Err(_) => data::Outcome::Error((
                 Status::Forbidden,
                 CsrfProtectedFormWithGuardError::CsrfProtection(
                     CsrfProtectedFormError::CsrfTokenVerificationError,
