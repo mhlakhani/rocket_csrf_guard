@@ -14,3 +14,15 @@ rocket.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 rocket_csrf_guard_derive = { path = "../rocket_csrf_guard_derive" }
+
+[dev-dependencies]
+console.workspace = true
+hex.workspace = true
+mini-moka.workspace = true
+rocket_dyn_templates.workspace = true
+sha3.workspace = true
+similar.workspace = true
+
+[[example]]
+name = "end_to_end"
+doc-scrape-examples = true

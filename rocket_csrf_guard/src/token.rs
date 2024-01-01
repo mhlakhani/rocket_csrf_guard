@@ -2,11 +2,13 @@ use std::ops::Deref;
 
 use rocket::form::Form;
 
-// A thing that has a csrf token provided from user input
+/// A thing that has a csrf token provided from user input
 pub trait WithUserProvidedCsrfToken {
     fn csrf_token(&self) -> &str;
 }
 
+/// Convenience implementation for [`rocket::form::Form`] which
+/// automatically provides a csrf token if the inner type does.
 impl<T> WithUserProvidedCsrfToken for Form<T>
 where
     T: WithUserProvidedCsrfToken,
@@ -16,9 +18,10 @@ where
     }
 }
 
-// Use this in extremely sparing circumstances: e.g. you have no choice
-// but to send a csrf token embedded somewhere random and just have the string.
-// This can cause all sorts of security problems.
+/// Construct a CsrfToken from thin air.
+/// Use this in extremely sparing circumstances: e.g. you have no choice
+/// but to send a csrf token embedded somewhere random and just have the string.
+/// This can cause all sorts of security problems.
 #[allow(non_camel_case_types)]
 pub struct ManuallySourcedCsrfToken_DO_NOT_USE_UNLESS_YOU_ARE_SURE(String);
 

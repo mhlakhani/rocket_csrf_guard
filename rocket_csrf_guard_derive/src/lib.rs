@@ -44,9 +44,6 @@ fn get_singular_lifetime(item: &ItemStruct) -> Option<Ident> {
     }
 }
 
-/// # Panics
-///
-/// Should never panic unless there are bugs in the implementation
 #[proc_macro_attribute]
 pub fn with_csrf_token(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut item_struct = parse_macro_input!(input as ItemStruct);
@@ -68,21 +65,16 @@ pub fn with_csrf_token(args: TokenStream, input: TokenStream) -> TokenStream {
         // TODO: Validate field type is string or &str
         if !existing {
             if let Some(lifetime) = lifetime {
-                let mut field = Field::parse_named
-                    .parse2(quote! { #ident: &'a str })
-                    .expect("invalid hardcoded str field declaration");
-                if let Type::Reference(reference) = &mut field.ty {
-                    if let Some(field_lifetime) = reference.lifetime.as_mut() {
-                        field_lifetime.ident = lifetime;
+                if let Ok(mut field) = Field::parse_named.parse2(quote! { #ident: &'a str }) {
+                    if let Type::Reference(reference) = &mut field.ty {
+                        if let Some(field_lifetime) = reference.lifetime.as_mut() {
+                            field_lifetime.ident = lifetime;
+                        }
                     }
+                    fields.named.push(field);
                 }
+            } else if let Ok(field) = syn::Field::parse_named.parse2(quote! { #ident: String }) {
                 fields.named.push(field);
-            } else {
-                fields.named.push(
-                    syn::Field::parse_named
-                        .parse2(quote! { #ident: String })
-                        .expect("invalid hardcoded String field declaration"),
-                );
             }
         }
     }

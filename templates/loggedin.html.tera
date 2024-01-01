@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Example</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Example</h1>
+
+      <p>You passed the right csrf token, {{ name }}!</p>
+
+      <p>You can test CSRF checks using headers by running the following curl commands:</p>
+      <ul>
+        <li>For valid requests: <code>curl https://localhost:8000/header -k -H "X-Csrf-Token: {{ csrf_token }}" -H "Authorization: Bearer {{ session_id }}"</code></li>
+        <li>For valid requests: <code>curl https://localhost:8000/header -k -H "X-Csrf-Token: invalid_token" -H "Authorization: Bearer {{ session_id }}"</code></li>
+      </ul>
+    </div>
+
+    <p>You can test out a session based CSRF protected form with the following button</p>
+    <form action="/logout" method="post">
+      <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token }}">
+      <input type="submit" value="Logout"/>
+    </form>
+  </body>
+  <!--
+{{csrf_token}}
+  -->
+</html>

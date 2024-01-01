@@ -1,12 +1,11 @@
 use rocket::request::{FromRequest, Outcome, Request};
 
-// Used for security checks etc.
-// TODO: Document
+/// A proof that a request has passed CSRF checks.
+/// Useful for constructing secure by default frameworks.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CsrfCheckProof {
-    // This should ideally be tied to a request with a lifetime
-    // but we don't want to carry around lifetimes everywhere
-    // TODO: Try this out though at some point, maybe it's fine
+    /// The request has passed CSRF checks.
+    /// This is the only valid value for this type.
     PassedCsrfChecks,
 }
 
@@ -16,9 +15,8 @@ impl Default for CsrfCheckProof {
     }
 }
 
-// By default, consider this an unauthorized web request
-// Users, if desired, need to run CSRF checks *before* this one and populate the cache
-// TODO: Have an option which returns a forbidden instead of a Forward?
+/// By default, consider this an unauthorized web request
+/// Users, if desired, need to run CSRF checks *before* this one and populate the cache
 #[async_trait::async_trait]
 impl<'r> FromRequest<'r> for CsrfCheckProof {
     type Error = std::convert::Infallible;

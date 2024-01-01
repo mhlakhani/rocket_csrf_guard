@@ -10,15 +10,19 @@ use serde::Serialize;
 
 const CSRF_HEADER_NAME: &str = "X-CSRF-Token";
 
-// Errors when doing csrf checks
+/// Errors when validating a [`CheckCsrfProtectionHeader`]
 #[derive(Debug)]
 pub enum CheckCsrfProtectionHeaderError {
+    /// There was no valid instance of a [`CsrfTokenVerifier`] to validate the provided token against.
     NoVerifierFound,
+    /// The request did not pass an X-CSRF-Token header.
     NoHeaderPresent,
+    /// There was an error verifying the token itself, perhaps because it was incorrect.
+    /// Intentionally an opaque type so error messages cannot contain the token.
     CsrfTokenVerificationError,
 }
 
-// Wrapper type to enable csrf protection from header values
+/// Wrapper type to enable csrf protection from header values
 pub struct CsrfTokenSourcedFromHeader<'r>(&'r str);
 
 impl<'r> WithUserProvidedCsrfToken for CsrfTokenSourcedFromHeader<'r> {
@@ -27,7 +31,7 @@ impl<'r> WithUserProvidedCsrfToken for CsrfTokenSourcedFromHeader<'r> {
     }
 }
 
-// A wrapper which verifies that a request has passed CSRF checks via checking for the headers
+/// A wrapper which verifies that a request has passed CSRF checks via checking for the headers
 #[derive(Debug, Serialize)]
 pub struct CheckCsrfProtectionHeader<V>(std::marker::PhantomData<V>);
 

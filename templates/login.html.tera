@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Example</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Example</h1>
+
+      <p>This example shows how you can protect a form using double submit cookies.</p>
+      <p>The login forms are protected using a double submit cookie, since there is no valid session</p>
+
+      <form action="/" method="post">
+        <input type="text" id="name" name="name" />
+        <input type="hidden" id="csrf_token" name="csrf_token" value="{{ csrf_token }}">
+        <input type="submit" value="Login"/>
+      </form>
+
+      <form action="/" method="post">
+        <input type="hidden" id="name" name="name" value="some_name">
+        <input type="hidden" id="csrf_token" name="csrf_token" value="wrong_token">
+        <input type="submit" value="Submit an invalid csrf token"/>
+      </form>
+
+    </div>
+  </body>
+</html>

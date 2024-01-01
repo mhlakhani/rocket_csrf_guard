@@ -1,30 +1,33 @@
 use crate::{
-    util::secure_id, CsrfCheckProof, CsrfTokenVerificationError, CsrfTokenVerifier,
+    util::random_id, CsrfCheckProof, CsrfTokenVerificationError, CsrfTokenVerifier,
     WithUserProvidedCsrfToken,
 };
 
 use rocket::{
     http::{Cookie, CookieJar, SameSite},
-    request::{self, FromRequest, Request},
+    request::{FromRequest, Outcome, Request},
 };
 use serde::{Serialize, Serializer};
 
+/// Default double submit cookie name.
 pub const DOUBLE_SUBMIT_CSRF_TOKEN_COOKIE_NAME: &str = "__Host-csrf-token";
+
+/// Default double submit cookie expiry time.
 pub const DOUBLE_SUBMIT_CSRF_TOKEN_EXPIRY_SECONDS: i64 = 600;
+
+/// Default expiry time for a double submit cookie set with [`rocket::http::SameSite::None`]
 pub const DOUBLE_SUBMIT_CSRF_TOKEN_NONE_EXPIRY_SECONDS: i64 = 20;
 
-// A stateless csrf token used for double submit cookies.
-// Prefer using session ones where possible
-// Note this does NOT implement serialize - you should set a new one each request
+/// CSRF protection using Double Submit cookies.
+///
+/// Provides a verifier to check a provided CSRF token against an expected value present in
+/// a cookie which was previously set using [`SetDoubleSubmitCookieCsrfToken`]
+///
+/// Prefer using session based CSRF protection where possible.
 #[derive(Debug)]
 pub struct DoubleSubmitCookieCsrfToken(String);
 
-impl WithUserProvidedCsrfToken for DoubleSubmitCookieCsrfToken {
-    fn csrf_token(&self) -> &str {
-        &self.0
-    }
-}
-
+/// Verifies that the received token matches the cookie.
 #[async_trait::async_trait]
 impl CsrfTokenVerifier for DoubleSubmitCookieCsrfToken {
     type Proof = CsrfCheckProof;
@@ -42,11 +45,12 @@ impl CsrfTokenVerifier for DoubleSubmitCookieCsrfToken {
     }
 }
 
+/// Extracts the cookie from the request and drops it so it doesn't get reused.
 #[async_trait::async_trait]
 impl<'r> FromRequest<'r> for DoubleSubmitCookieCsrfToken {
     type Error = std::convert::Infallible;
 
-    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let maybe_csrf_token = request
             .cookies()
             .get_private(DOUBLE_SUBMIT_CSRF_TOKEN_COOKIE_NAME)
@@ -56,13 +60,17 @@ impl<'r> FromRequest<'r> for DoubleSubmitCookieCsrfToken {
                 request.cookies().remove(cookie);
                 value
             });
-        maybe_csrf_token.map_or(request::Outcome::Forward(()), |csrf_token| {
-            request::Outcome::Success(Self(csrf_token))
+        maybe_csrf_token.map_or(Outcome::Forward(()), |csrf_token| {
+            Outcome::Success(Self(csrf_token))
         })
     }
 }
 
-// Allows setting a double submit cookie and returning the value to set in a form.
+/// Sets a Double Submit cookie with the given expiry and SameSite setting.
+///
+/// Use this as a request guard so it sets the cookie in the returned response.
+/// This type implements [`serde::Serialize`] so you can extract the value to display
+/// it in a form or some other location so the client can pass it along in the request.
 #[derive(Debug)]
 pub struct SetDoubleSubmitCookieCsrfTokenImpl<'r, const SS: i8, const EXPIRY: i64> {
     // Keep a reference to the cookie jar so we can create the cookie if this gets
@@ -76,6 +84,7 @@ const SAME_SITE_LAX: i8 = 1;
 const SAME_SITE_NONE_DO_NOT_USE_UNLESS_YOU_ARE_SURE: i8 = 2;
 
 impl<'r, const SS: i8, const EXPIRY: i64> SetDoubleSubmitCookieCsrfTokenImpl<'r, SS, EXPIRY> {
+    /// Creates a cookie with the value of the token, and returns the value.
     pub fn set(&self) -> &str {
         let ss = match SS {
             SAME_SITE_LAX => SameSite::Lax,
@@ -95,6 +104,7 @@ impl<'r, const SS: i8, const EXPIRY: i64> SetDoubleSubmitCookieCsrfTokenImpl<'r,
     }
 }
 
+/// Sets the cookie and serializes the value into the output form.
 impl<'r, const SS: i8, const EXPIRY: i64> Serialize
     for SetDoubleSubmitCookieCsrfTokenImpl<'r, SS, EXPIRY>
 {
@@ -106,16 +116,17 @@ impl<'r, const SS: i8, const EXPIRY: i64> Serialize
     }
 }
 
+/// Creates a random token which can be set as a cookie.
 #[async_trait::async_trait]
 impl<'r, const SS: i8, const EXPIRY: i64> FromRequest<'r>
     for SetDoubleSubmitCookieCsrfTokenImpl<'r, SS, EXPIRY>
 {
     type Error = std::convert::Infallible;
 
-    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
-        let maybe_csrf_token = secure_id(16);
-        maybe_csrf_token.map_or(request::Outcome::Forward(()), |csrf_token| {
-            request::Outcome::Success(Self {
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let maybe_csrf_token = random_id(16);
+        maybe_csrf_token.map_or(Outcome::Forward(()), |csrf_token| {
+            Outcome::Success(Self {
                 cookies: request.cookies(),
                 csrf_token,
             })
@@ -123,14 +134,19 @@ impl<'r, const SS: i8, const EXPIRY: i64> FromRequest<'r>
     }
 }
 
+/// Default [`DoubleSubmitCookieCsrfToken`] setting, using [`rocket::http::SameSite::Strict`] and an expiry of 10 minutes.
 pub type SetDoubleSubmitCookieCsrfToken<'r> = SetDoubleSubmitCookieCsrfTokenImpl<
     'r,
     SAME_SITE_STRICT,
     DOUBLE_SUBMIT_CSRF_TOKEN_EXPIRY_SECONDS,
 >;
+
+/// Lax [`DoubleSubmitCookieCsrfToken`] setting, using [`rocket::http::SameSite::Lax`] and an expiry of 10 minutes.
 pub type SetLaxDoubleSubmitCookieCsrfToken<'r> =
     SetDoubleSubmitCookieCsrfTokenImpl<'r, SAME_SITE_LAX, DOUBLE_SUBMIT_CSRF_TOKEN_EXPIRY_SECONDS>;
 
+/// Insecure [`DoubleSubmitCookieCsrfToken`] setting, using [`rocket::http::SameSite::None`] and an expiry of 20 seconds.
+/// Avoid this as much as possible.
 #[allow(non_camel_case_types)]
 pub type SetNoneDoubleSubmitCookieCsrfToken_DO_NOT_USE_UNLESS_YOU_ARE_SURE<'r> =
     SetDoubleSubmitCookieCsrfTokenImpl<

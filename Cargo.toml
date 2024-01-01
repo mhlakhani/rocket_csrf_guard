@@ -5,7 +5,6 @@ resolver = "2"
 members = [
     "rocket_csrf_guard_derive",
     "rocket_csrf_guard",
-    "examples/*",
 ]
 
 [workspace.package]
@@ -15,12 +14,17 @@ version = "0.0.1"
 async-trait = "0.1"
 anyhow = "1.0"
 base64 = "0.13"
+console = "0.15"
+hex = "0.4"
+mini-moka = { version = "0.10", features = ["sync"] }
 proc-macro2 = "1.0"
 quote = "1.0"
 rand = "0.8"
-rocket = { version = "0.5.0-rc.3", features = [ "json", "secrets", "tls"] }
+rocket = { version = "=0.5.0-rc.3", features = [ "json", "secrets", "tls"] } # TODO: Update
 rocket_dyn_templates = { version = "0.1.0-rc.3", features = ["tera"] }
 serde = "1.0"
 serde_derive = "1.0"
+sha3 = "0.10"
+similar = "2.3"
 syn = {version = "1.0", features = ["full", "extra-traits", "printing"]}
 thiserror = "1.0"
