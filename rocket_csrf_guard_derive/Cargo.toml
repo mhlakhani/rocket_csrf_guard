@@ -2,6 +2,12 @@
 name = "rocket_csrf_guard_derive"
 version.workspace = true
 edition = "2021"
+authors = ["Hasnain Lakhani <m.hasnain.lakhani@gmail.com>"]
+categories = ["web-programming"]
+description = "Ergonomic CSRF protection for Rocket applications"
+keywords = ["csrf", "rocket"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/mhlakhani/rocket_csrf_guard"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
