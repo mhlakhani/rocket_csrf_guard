@@ -1,7 +1,7 @@
 use rocket::request::{FromRequest, Outcome, Request};
 
 /// A proof that a request has passed CSRF checks.
-/// Useful for constructing secure by default frameworks.
+/// Useful for constructing secure by default frameworks, [as seen in this blogpost](https://mhlakhani.com/blog/2024/01/on-secure-by-default-frameworks/)
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CsrfCheckProof {
     /// The request has passed CSRF checks.

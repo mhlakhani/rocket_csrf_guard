@@ -1601,7 +1601,7 @@ dependencies = [
 
 [[package]]
 name = "rocket_csrf_guard"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1611,7 +1611,7 @@ dependencies = [
  "mini-moka",
  "rand",
  "rocket",
- "rocket_csrf_guard_derive 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rocket_csrf_guard_derive 0.0.1",
  "rocket_dyn_templates",
  "serde",
  "sha3",
@@ -1622,6 +1622,8 @@ dependencies = [
 [[package]]
 name = "rocket_csrf_guard_derive"
 version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0cc08f20ffa1dfe3a7e5b72dbd59bee668d386a152538ecef01864e15fee983f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1630,9 +1632,7 @@ dependencies = [
 
 [[package]]
 name = "rocket_csrf_guard_derive"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0cc08f20ffa1dfe3a7e5b72dbd59bee668d386a152538ecef01864e15fee983f"
+version = "0.0.2"
 dependencies = [
  "proc-macro2",
  "quote",
