@@ -7,3 +7,5 @@ This is a useful building block for secure by default frameworks, [as seen in th
 Works with rocket 0.5.0 and above.
 
 Look at the documentation and examples to learn more.
+
+This is provided AS-IS and does not guarantee a secure application by itself. For reporting security issues in this library, please contact me using the information on my github profile.
